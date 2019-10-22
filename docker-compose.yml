@@ -3,7 +3,11 @@ services:
   broker:
     image: 'rabbitmq:3.8.0'
     restart: always
-    networks: 'broker'
-  
+    networks: 
+      - broker
+  data:
+    image: 'minio/minio:latest'
+  db:
+    image: 'mysql:8.0.18'
 networks:
   broker:
