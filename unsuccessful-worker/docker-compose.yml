@@ -1,0 +1,21 @@
+version: "3.7"
+services:
+  data:
+    image: 'minio/minio:latest'
+    environment: 
+      MINIO_ACCESS_KEY: "admin"
+      MINIO_SECRET_KEY: "asdhgrwert12"
+    restart: always
+    ports:
+      - "9000:9000"
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "9000":"9000"
+    volumes: 
+      - type: bind
+        source: /home/a/Airfoil
+        target: /fenicsworker
