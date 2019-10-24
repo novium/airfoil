@@ -23,7 +23,7 @@ def upload_result(angle):
         raise
 
     try:
-        minioClient.fput_object(bucketname, 'results', zipfile)
+        minioClient.fput_object(bucketname, 'results.tar.gz', zipfile)
     except ResponseError as err:
         print(err)
     return 'url'
@@ -58,7 +58,7 @@ def caculate(angle):
 
     #delete result folder and results.tar.gz
     os.system("rm -r results")
-    #os.system("rm -r results.tar.gz")
+    os.system("rm -r results.tar.gz")
 
     return "miniourl"
 
