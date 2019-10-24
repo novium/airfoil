@@ -26,7 +26,7 @@ def upload_result(angle):
         minioClient.fput_object(bucketname, 'results.tar.gz', zipfile)
     except ResponseError as err:
         print(err)
-    return 'url'
+    return 'url' #### can't figure out where it stored
 
 
 celery = Celery(__name__, broker='pyamqp://',backend='rpc://')
