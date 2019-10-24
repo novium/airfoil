@@ -7,4 +7,4 @@ So I use docker-compose run worker /bin/bash, but the CMD[] in dockerfile didn't
 
 In tasks.py, in this scrip didn't use celery, call with angel 12.
 
-And in tasks.py, the function to upload to minio doesn't work.. connection refused I think??
+And in tasks.py, the function to upload to minio doesn't work.. "[Errno -5] No address associated with hostname"
