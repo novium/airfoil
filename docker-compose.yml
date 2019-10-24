@@ -5,6 +5,8 @@ services:
     restart: always
     networks: 
       - broker
+  worker:
+    build: './worker'
   data:
     image: 'minio/minio:latest'
   db:
