@@ -1,6 +1,11 @@
 name: Build Worker Docker Image
 
-on: [push]
+on:
+  push:
+    branches:
+      - 'master'
+    paths:
+      - './worker'
 
 jobs:
 

@@ -1,0 +1,26 @@
+version: '3.7'
+services:
+  broker:
+    image: 'rabbitmq:3.8.0'
+    restart: always
+    networks: 
+      - broker
+  worker:
+    build: './worker'
+  data:
+    image: 'minio/minio:latest'
+  db:
+    image: 'mysql:8.0.18'
+  web:
+    image: 'nginx:latest'
+    volumes:
+      - type: 'bind'
+        source: './web_ui/html'
+        target: '/usr/share/nginx/html'
+      - type: 'bind'
+        source: './web_ui/conf'
+        target: '/usr/share/nginx/conf'
+    ports:
+      - 80:80
+networks:
+  broker: 

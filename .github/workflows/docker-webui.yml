@@ -1,0 +1,24 @@
+name: Build Web-UI Docker Image
+
+on:
+  push:
+    branches:
+      - 'master'
+    paths:
+      - './web_ui'
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build the Docker image
+      run: |
+        cd web_ui
+        TIME=$(date +%s)
+        docker login docker.pkg.github.com -u novium -p ${{ secrets.GITHUB_TOKEN }}
+        docker build . --file Dockerfile --tag docker.pkg.github.com/novium/airfoil/web_ui:$TIME
+        docker push docker.pkg.github.com/novium/airfoil/web_ui:$TIME
