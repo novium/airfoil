@@ -12,3 +12,6 @@ RUN cd murtazo && tar xzf cloudnaca.tgz && tar xf navier_stokes_solver.tar
 RUN cd murtazo/navier_stokes_solver/src && ./compile_forms && cd .. && cmake . && make -j 2
 ENV PATH="/home/fenics/murtazo/navier_stokes_solver:${PATH}"
 RUN cd /home/fenics/murtazo/cloudnaca && sed -i '20s/.*/GMSHBIN="\/usr\/bin\/gmsh"/' runme.sh
+
+WORKDIR /usr/share
+ENTRYPOINT sh -c 'cd /usr/share && /usr/local/bin/celery -A worker worker'

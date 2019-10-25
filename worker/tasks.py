@@ -7,7 +7,7 @@ from minio.error import (ResponseError, BucketAlreadyOwnedByYou,
 minioClient = Minio('data',
                   access_key='admin',
                   secret_key='asdhgrwert12',
-                  secure=TRUE)
+                  secure=True)
 
 #to upload result to minio
 def upload_result(angle):
@@ -23,27 +23,23 @@ def upload_result(angle):
         raise
 
     try:
-        minioClient.fput_object(bucketname, 'results', zipfile)
+        minioClient.fput_object(bucketname, 'results.tar.gz', zipfile)
     except ResponseError as err:
         print(err)
-    return 'url'
-
-
-celery = Celery(__name__, broker='pyamqp://',backend='rpc://')
-
+    return 'url' #### can't figure out where it stored
 
 @celery.task
 def caculate(angle):
 
     #generate mash
-    generate_mash="cd ./murtazo/cloudnaca && ./runme.sh"+" "+str(angle)+" "+str(angle)+" 1"+" 200 3"
-    os.system(generate_mash)
+    generate_mesh="cd ./murtazo/cloudnaca && ./runme.sh"+" "+str(angle)+" "+str(angle)+" 1"+" 200 3"
+    os.system(generate_mesh)
 
     #convert mash file
-    mashfile='./murtazo/cloudnaca/msh/r3a'+str(angle)+'n200.msh'
+    meshfile='./murtazo/cloudnaca/msh/r3a'+str(angle)+'n200.msh'
     xmlfile='./murtazo/cloudnaca/msh/r3a'+str(angle)+'n200.xml'
 
-    generate_xml='dolfin-convert '+mashfile+' '+xmlfile
+    generate_xml='dolfin-convert '+meshfile+' '+xmlfile
     os.system(generate_xml)
 
     run_airfoil='./murtazo/navier_stokes_solver/airfoil  10 0.0001 10. 0.01 '+xmlfile
@@ -58,7 +54,7 @@ def caculate(angle):
 
     #delete result folder and results.tar.gz
     os.system("rm -r results")
-    #os.system("rm -r results.tar.gz")
+    os.system("rm -r results.tar.gz")
 
     return "miniourl"
 

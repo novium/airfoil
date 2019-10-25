@@ -7,6 +7,12 @@ services:
       - broker
   worker:
     build: './worker'
+    volumes:
+      - type: 'bind'
+        source: './worker'
+        target: '/usr/share/worker'
+    networks:
+      - broker
   data:
     image: 'minio/minio:latest'
   db:
