@@ -9,5 +9,16 @@ services:
     image: 'minio/minio:latest'
   db:
     image: 'mysql:8.0.18'
+  web:
+    image: 'nginx:latest'
+    volumes:
+      - type: 'bind'
+        source: './web_ui/html'
+        target: '/usr/share/nginx/html'
+      - type: 'bind'
+        source: './web_ui/conf'
+        target: '/usr/share/nginx/conf'
+    ports:
+      - 80:80
 networks:
-  broker:
+  broker: 
