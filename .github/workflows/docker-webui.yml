@@ -5,7 +5,7 @@ on:
     branches:
       - 'master'
     paths:
-      - './web_ui'
+      - './web_ui/**'
 
 jobs:
 
