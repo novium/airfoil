@@ -23,10 +23,10 @@ def upload_result(angle):
         raise
 
     try:
-        minioClient.fput_object(bucketname, 'results', zipfile)
+        downloadurl=minioClient.presigned_put_object(bucketname, zipfile,expires=timedelta(days=3))
     except ResponseError as err:
         print(err)
-    return 'url'
+    return str(downloadurl)
 
 
 celery = Celery(__name__, broker='pyamqp://',backend='rpc://')
@@ -53,13 +53,13 @@ def caculate(angle):
     zipcommand='tar -zcvf results.tar.gz ./results'
     os.system(zipcommand)
 
-    #upload to minio !!!! THIS DOESN'T WORK !!!
-    # miniourl=upload_result(angle)
+    #upload to minio
+    miniourl=upload_result(angle)
 
     #delete result folder and results.tar.gz
     os.system("rm -r results")
-    #os.system("rm -r results.tar.gz")
+    os.system("rm -r results.tar.gz")
 
-    return "miniourl"
+    return miniourl
 
 caculate(12)
