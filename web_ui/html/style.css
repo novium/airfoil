@@ -1,0 +1,11 @@
+body {
+    padding-top: 20px;
+}
+
+#wait-job {
+    display: none;
+}
+
+#results {
+    display: none;
+}
