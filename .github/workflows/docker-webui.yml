@@ -2,15 +2,11 @@ name: Build Web-UI Docker Image
 
 on:
   push:
-    branches:
-      - 'master'
     paths:
-      - 'web_ui/**'
+    - 'web_ui/**'
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
