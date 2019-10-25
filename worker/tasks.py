@@ -63,4 +63,4 @@ def caculate(angle):
 
     return miniourl
 
-caculate(12)
+#caculate(12)
