@@ -12,7 +12,7 @@ async function createNewJob() {
 
     for(let i = 0; i <= 100; i += 10) {
         $('#progress-bar').width(i + '%');
-        await sleep(300);
+        await sleep(350);
     }
     $('#progress-bar').addClass('bg-success');
     
