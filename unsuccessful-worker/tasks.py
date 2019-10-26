@@ -6,7 +6,7 @@ import numpy
 from minio.error import (ResponseError, BucketAlreadyOwnedByYou,
                          BucketAlreadyExists)
 
-minioClient = Minio('data',
+minioClient = Minio('data:9000',
                   access_key='admin',
                   secret_key='asdhgrwert12',
                   secure=False)
