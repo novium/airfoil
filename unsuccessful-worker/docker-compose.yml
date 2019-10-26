@@ -14,16 +14,12 @@ services:
       MINIO_ACCESS_KEY: "admin"
       MINIO_SECRET_KEY: "asdhgrwert12"
     restart: unless-stopped
-    ports:
-      - "9000:9000"
-      - "80:80"
-      - "443:443"
     networks: 
       - broker
-    command: server /data
+    command: server data
 
   worker:
-    build: ./Dockerfile
+    build: './unsuccessful-worker'
     volumes: 
       - type: bind
         source: ./unsuccessful-worker
