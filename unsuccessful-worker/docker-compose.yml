@@ -25,10 +25,10 @@ services:
   worker:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./unsuccessful-worker/Dockerfile
     volumes: 
       - type: bind
-        source: /home/a/Airfoil
+        source: ./unsuccessful-worker
         target: /home/fenics
     networks: 
       - broker
