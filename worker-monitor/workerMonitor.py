@@ -1,16 +1,57 @@
+#!/usr/bin/env python3
+"""workerMonitor.py"""
+
 # http://docs.openstack.org/developer/python-novaclient/ref/v2/servers.html
-import time, os, sys
+import time, os, sys, signal, socket
 import inspect
 from os import environ as env
 import subprocess
 from celery import Celery
+import json
 
 from novaclient import client
 import keystoneclient.v3.client as ksclient
 from keystoneauth1 import loading
 from keystoneauth1 import session
 
+# Some operation constants.
 BROKER_URL = "pyamqp://tweets:tweets@192.168.1.26/tweets"
+WORKERS_UPPER_LIMIT = 0.5
+WORKERS_LOWER_LIMIT = 0.1
+WORKERS_MIN         = 1
+WORKERS_STEP        = 2
+WORKERS_NAME        = socket.gethostname()
+RELEASE_CALLS       = 5
+
+# Workers info.
+numWorkers   = 0
+numTasks     = 0
+releaseCalls = 0
+
+def signal_handler(sig, frame):
+    print( "\nShutting down..." )
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
+
+def execCommand( cmd ):
+    print( '\bExecuting: ' + cmd )
+
+    resOutput = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    
+    lines = [x.decode('utf8').strip() for x in resOutput.stdout.readlines()]
+    
+    return( lines )
+
+
+def getWorkerName( name ):
+    rname = name.split('@', 1)
+
+    if len(rname) > 1:
+        return rname[1]
+    else:
+        return name 
+
 
 def createWorkerVM( workerName ):
     print( "Creating VM: " + workerName )
@@ -108,8 +149,11 @@ def removeVM( workerName ):
         while inst_status == 'ACTIVE':
             print( "Instance: "+instance.name+" is in "+inst_status+" state, sleeping for 5 seconds more..." )
             time.sleep(5)
-            instance = nova.servers.get(instance.id)
-            inst_status = instance.status
+            try:
+                instance = nova.servers.get(instance.id)
+                inst_status = instance.status
+            except:
+                break
 
         break
 
@@ -119,15 +163,6 @@ def removeVM( workerName ):
         return( False )
 
     return( True )
-
-
-def execCommand( cmd ):
-    print( 'Executing: ' + cmd )
-
-    resOutput = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    
-    lines = [x.decode('utf8').strip() for x in resOutput.stdout.readlines()]
-    
-    return( lines )
 
 
 def drainWorker( workerName ):
@@ -178,6 +213,56 @@ def removeWorkerVM( workerName ):
     return( True )
 
 
+def createWorkerCL( workerName ):
+    print( "\tAdding worker: ", workerName )
+    cmd = "celery -A ctweetsw worker -n celery@" + workerName + " --quiet &"
+    os.system( cmd )
+
+
+def removeWorkerCL( workerName ):
+    print( "\tReleasing: ", workerName )
+    cmd = "ps auxww | grep \"" + workerName + "\" | awk '{print $2}' | xargs kill -9 2> /dev/null"
+    cmdRes = os.system( cmd )
+
+
+def addMoreWorkers( allWorkers ):
+    print( "Adding more workes." )
+
+    for w in range(WORKERS_STEP):
+        workerName = WORKERS_NAME + "-" + str(w +1 + len(allWorkers) )
+        createWorkerCL( workerName )
+
+    global releaseCalls
+    releaseCalls = 0
+
+
+def releaseWorkers( allWorkers, busyWorkers ):
+    print( "Releasing workers." )    
+
+    # Do not release every time. Wait a little. 
+    global releaseCalls
+    releaseCalls = releaseCalls +1
+    if releaseCalls <= RELEASE_CALLS:
+        print( "\tWaiting ", releaseCalls )
+        return
+    else:
+        releaseCalls = 0
+
+    for w in busyWorkers:
+        print( "\tBusy: ", w )
+
+    toRemove = []
+    for w in allWorkers:
+        if not w in busyWorkers:
+            toRemove.append( w )
+
+    toRemove.sort()
+    while len( toRemove ) > WORKERS_MIN:
+        worker = toRemove[ len(toRemove) -1 ]
+        removeWorkerCL( worker )
+        toRemove.remove( worker )
+
+
 def monitorWorkers( manager ):
     print( "Monitorig: " + manager )
 
@@ -185,13 +270,64 @@ def monitorWorkers( manager ):
              backend='rpc://',
              broker=manager)
 
-    stats = app.control.inspect().ping()
-    if not stats is None: 
-        for worker in stats:
-            print( worker + " - Online" )
+    while True:
+        numWorkers = 0
+        numTasks   = 0
+        utilization = 0
+        busyWorkers = []
+        allWorkers  = []
+        inspect = app.control.inspect()
 
-    
+        workers = inspect.ping()
+        if not workers is None: 
+            numWorkers = len( workers )
+            for worker in workers:
+                allWorkers.append( getWorkerName(worker) )
+                print( worker + " - Online" )
 
-#removeWorkerVM( "gnentid-python-vm1" )
+        # Count active tasks.
+        allTasks = inspect.active()
+        if not allTasks is None:
+            for workerId in allTasks:
+                
+                workerTasks = allTasks[workerId]
+                numTasks = numTasks + len( workerTasks )
+
+                if len( workerTasks ) != 0:
+                    busyWorkers.append( getWorkerName(workerId) )
+
+        # Count queued tasks too.
+        allTasks = inspect.reserved()
+        if not allTasks is None:
+            for workerId in allTasks:
+                
+                workerTasks = allTasks[workerId]
+                numTasks = numTasks + len( workerTasks )
+
+                # for task in workerTasks:
+                #     print( type(task) )
+                #     print( task['id'], task['name'] )
+
+        if numWorkers != 0:
+            utilization = numTasks / numWorkers
+        print( "Workers     :", numWorkers )
+        print( "Tasks       :", numTasks )
+        if utilization > 1:
+            print( "Utilization : %3.1f %%  Panic!!! " % (utilization * 100.0) )
+        else:
+            print( "Utilization : %3.1f %%" % (utilization * 100.0) )
+
+        if( utilization >= WORKERS_UPPER_LIMIT ):
+            addMoreWorkers( allWorkers )
+        else:
+            if( utilization <= WORKERS_LOWER_LIMIT and numWorkers > WORKERS_MIN ):
+                releaseWorkers( allWorkers, busyWorkers )
+
+        print( "===========================================" )
+        time.sleep(5)
+
+
+
+#removeWorkerVM( "gnentid-python-vm2" )
 #createWorkerVM( "gnentid-python-vm2" )
 monitorWorkers( BROKER_URL )
