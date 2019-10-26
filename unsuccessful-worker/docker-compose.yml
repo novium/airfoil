@@ -1,21 +1,36 @@
 version: "3.7"
 services:
+  broker:
+    image: 'rabbitmq:3.8.0'
+    restart: always
+    ports:
+      - "5672:5672"
+    networks: 
+      - broker
   data:
     image: 'minio/minio:latest'
+    hostname: data
     environment: 
       MINIO_ACCESS_KEY: "admin"
       MINIO_SECRET_KEY: "asdhgrwert12"
-    restart: always
+    restart: unless-stopped
     ports:
       - "9000:9000"
+      - "80:80"
+      - "443:443"
+    networks: 
+      - broker
+    command: server /data
 
   worker:
     build:
       context: .
       dockerfile: ./Dockerfile
-    ports:
-      - "9000":"9000"
     volumes: 
       - type: bind
         source: /home/a/Airfoil
-        target: /fenicsworker
+        target: /home/fenics
+    networks: 
+      - broker
+networks:
+  broker: 
