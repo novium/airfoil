@@ -11,6 +11,6 @@ ENV PATH="/home/fenics/murtazo/navier_stokes_solver:${PATH}"
 RUN cd /home/fenics/murtazo/cloudnaca && sed -i '20s/.*/GMSHBIN="\/usr\/bin\/gmsh"/' runme.sh
 
 ARG CACHEBUST=8
-WORKDIR /home/fenics
+WORKDIR /home/fenics/unsuccessful-worker
 
 CMD ["celery -A tasks worker -l info"]
