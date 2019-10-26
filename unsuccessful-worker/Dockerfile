@@ -1,19 +1,19 @@
 FROM quay.io/fenicsproject/stable:current
 RUN apt-get update
-RUN apt-get -y upgrade
-RUN apt-get install -y python-pip
-RUN apt-get install -y gmsh
-RUN apt-get install python-numpy
+RUN apt-get install -y python python-pip python-numpy gmsh
 RUN python -m pip install --upgrade pip
-RUN python -m pip install celery
-RUN python -m pip install minio
-WORKDIR /fenicsworker
-# CMD ["tar xzvf murtazo.tgz"]
-# CMD ["cd /fenicsworker/murtazo && tar xvf cloudnaca.tgz"]
-# CMD ["cd /fenicsworker/murtazo && tar xvf navier_stokes_solver.tar"] 
-CMD ["cd /fenicsworker/murtazo/navier_stokes_solver/src && ./compile_forms"]
-CMD ["cd /fenicsworker/murtazo/navier_stokes_solver && cmake ."]
-CMD ["cd /fenicsworker/murtazo/navier_stokes_solver && make -j 2"]
-CMD ["cd /fenicsworker && python tasks.py"]
+RUN python -m pip install celery minio
+RUN wget https://blob.novium.pw/shrx/2019/10/7FgjGco/murtazo.tgz
+RUN tar xvf murtazo.tgz
+RUN cd murtazo && tar xzf cloudnaca.tgz && tar xf navier_stokes_solver.tar
+RUN cd murtazo/navier_stokes_solver/src && ./compile_forms && cd .. && cmake . && make -j 2
+ENV PATH="/home/fenics/murtazo/navier_stokes_solver:${PATH}"
+RUN cd /home/fenics/murtazo/cloudnaca && sed -i '20s/.*/GMSHBIN="\/usr\/bin\/gmsh"/' runme.sh
 
-
+ARG CACHEBUST=8
+WORKDIR /home/fenics
+COPY run.sh /usr/local/bin/
+# COPY tasks.py /home/fenics
+RUN sed -i -e 's/\r$//' /usr/local/bin/run.sh
+RUN ln -s /usr/local/bin/run.sh
+CMD ["celery -A tasks worker -l info"]
