@@ -1,17 +1,17 @@
 from celery import Celery
 import os
-from datetime import timedelta
 from minio import Minio
+from datetime import timedelta
+import numpy
 from minio.error import (ResponseError, BucketAlreadyOwnedByYou,
                          BucketAlreadyExists)
-
-# it shows connect failed with this parameter
-celery = Celery(__name__, broker='pyamqp://',backend='rpc://')
 
 minioClient = Minio('data',
                   access_key='admin',
                   secret_key='asdhgrwert12',
-                  secure=TRUE)
+                  secure=False)
+
+celery = Celery(__name__, broker='amqp://guest:guest@broker',backend='rpc://')
 
 #to upload result to minio
 def upload_result(angle):
@@ -64,3 +64,4 @@ def caculate(angle):
 
     return miniourl
 
+#calculate(12)
