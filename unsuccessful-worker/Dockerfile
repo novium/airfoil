@@ -12,8 +12,5 @@ RUN cd /home/fenics/murtazo/cloudnaca && sed -i '20s/.*/GMSHBIN="\/usr\/bin\/gms
 
 ARG CACHEBUST=8
 WORKDIR /home/fenics
-COPY run.sh /usr/local/bin/
-# COPY tasks.py /home/fenics
-RUN sed -i -e 's/\r$//' /usr/local/bin/run.sh
-RUN ln -s /usr/local/bin/run.sh
+
 CMD ["celery -A tasks worker -l info"]
