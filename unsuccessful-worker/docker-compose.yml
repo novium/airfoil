@@ -23,13 +23,11 @@ services:
     command: server /data
 
   worker:
-    build:
-      context: .
-      dockerfile: ./unsuccessful-worker/Dockerfile
+    build: ./Dockerfile
     volumes: 
       - type: bind
         source: ./unsuccessful-worker
-        target: /home/fenics
+        target: /home/fenics/unsuccessful-worker
     networks: 
       - broker
 networks:
