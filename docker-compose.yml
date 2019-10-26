@@ -10,7 +10,7 @@ services:
     volumes:
       - type: 'bind'
         source: './worker'
-        target: '/usr/share/worker'
+        target: '/home/fenics/worker'
     networks:
       - broker
   data:
