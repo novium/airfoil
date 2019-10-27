@@ -41,7 +41,7 @@ services:
         constraints:
           - node.role == manager
   web:
-    image: 'docker.pkg.github.com/novium/airfoil/web_ui:1572084738'
+    image: 'docker.pkg.github.com/novium/airfoil/web_ui:1572190458'
     labels:
       - "traefik.http.routers.web.rule=Host(`cloud.dev.novium.pw`)"
     deploy:
