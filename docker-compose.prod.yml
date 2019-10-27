@@ -5,6 +5,8 @@ services:
     restart: always
     networks: 
       - broker
+    ports:
+      - 5672:5672
     deploy:
       placement:
         constraints:
