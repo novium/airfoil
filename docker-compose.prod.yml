@@ -5,22 +5,64 @@ services:
     restart: always
     networks: 
       - broker
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
   worker:
-    build: './worker'
+    image: 'docker.pkg.github.com/novium/airfoil/worker:1571999994'
+    deploy:
+      placement:
+        constraints:
+          - node.role != manager
+      resources:
+        reservations:
+          cpus: '1.0'
   data:
     image: 'minio/minio:latest'
+    volumes:
+      - minio-data:/data
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server /data
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+    labels:
+      - "traefik.http.routers.data.rule=Host(`data.cloud.dev.novium.pw`)"
+    networks:
+      - broker
   db:
     image: 'mysql:8.0.18'
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
   web:
-    image: 'nginx:latest'
-    volumes:
-      - type: 'bind'
-        source: './web_ui/html'
-        target: '/usr/share/nginx/html'
-      - type: 'bind'
-        source: './web_ui/conf'
-        target: '/usr/share/nginx/conf'
+    image: 'docker.pkg.github.com/novium/airfoil/web_ui:1572189601'
+    labels:
+      - "traefik.http.routers.web.rule=Host(`cloud.dev.novium.pw`)"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+    networks:
+      - broker
+  proxy:
+    image: traefik:v2.0
+    command: --api.insecure=true --providers.docker
     ports:
       - 80:80
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - broker
+
 networks:
   broker: 
+
+volumes:
+  minio-data:
