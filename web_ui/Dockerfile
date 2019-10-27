@@ -1,4 +1,5 @@
 FROM nginx:latest
 
-COPY conf /usr/share/nginx/conf
+RUN rm /etc/nginx/conf.d/default.conf
+COPY conf /etc/nginx/conf.d
 COPY html /usr/share/nginx/html
