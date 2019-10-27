@@ -1,4 +1,3 @@
-http {
 server {
     listen 80;
     server_name: data.cloud.dev.novium.pw;
@@ -46,5 +45,4 @@ server {
     location / {
         root /usr/share/nginx/html;
     }
-}
 }
