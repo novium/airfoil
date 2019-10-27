@@ -1,5 +1,4 @@
 FROM nginx:latest
 
-RUN rm /etc/nginx/conf.d/sites-available/*
-COPY conf /etc/nginx/conf.d/sites-available
+COPY conf/nginx.conf /etc/nginx/nginx.conf
 COPY html /usr/share/nginx/html
