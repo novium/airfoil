@@ -6,7 +6,7 @@ services:
     networks: 
       - broker
     ports:
-      - 5672:5672
+      - 6000:5672
     deploy:
       placement:
         constraints:
