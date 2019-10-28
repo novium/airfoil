@@ -11,8 +11,18 @@ services:
       placement:
         constraints:
           - node.role == manager
+  api:
+    image: 'docker.pkg.github.com/novium/airfoil/api:1572271892'
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+    networks:
+      - broker
   worker:
     image: 'docker.pkg.github.com/novium/airfoil/worker:1571999994'
+    labels:
+      - "traefik.http.routers.web.rule=Host(`api.cloud.dev.novium.pw`)"
     deploy:
       mode: global
       placement:
@@ -21,6 +31,8 @@ services:
       resources:
         reservations:
           cpus: '1.0'
+    networks:
+      - broker
   data:
     image: 'minio/minio:latest'
     volumes:
@@ -39,6 +51,10 @@ services:
       - broker
   db:
     image: 'mysql:8.0.18'
+    environment:
+      MYSQL_ROOT_PASSWORD: '123'
+    volumes:
+      - mysql-data:/var/lib/mysql
     deploy:
       placement:
         constraints:
@@ -73,3 +89,4 @@ networks:
 
 volumes:
   minio-data:
+  mysql-data:
