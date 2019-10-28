@@ -6,18 +6,23 @@ from datetime import timedelta
 from minio.error import (ResponseError, BucketAlreadyOwnedByYou,
                          BucketAlreadyExists)
 
+db_host = 'db'
+db_user = 'root'
+db_password = '123'
+
 minioClient = Minio('data:9000',
-                  access_key='admin',
-                  secret_key='asdhgrwert12',
+                  access_key='minio',
+                  secret_key='minio123',
                   secure=False)
 
 celery = Celery(__name__, broker='amqp://guest:guest@broker',backend='rpc://')
 
 ### Double check if database and table exists, else build it
 db = mysql.connector.connect(
-            host='db',
-            user='root',
-            password='123')
+    host=db_host,
+    user=db_user,
+    password=db_password
+)
 mycursor = db.cursor(buffered=True)
 
 mycursor.execute('CREATE DATABASE IF NOT EXISTS airfoil')
