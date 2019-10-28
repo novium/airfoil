@@ -11,6 +11,17 @@ services:
       placement:
         constraints:
           - node.role == manager
+  api:
+    image: 'docker.pkg.github.com/novium/airfoil/api:1572276121'
+    deploy:
+      labels:
+        - "traefik.http.routers.api.rule=Host(`api.cloud.dev.novium.pw`)"
+        - "traefik.http.services.api-service.loadbalancer.server.port=80"
+      placement:
+        constraints:
+          - node.role == manager
+    networks:
+      - broker
   worker:
     image: 'docker.pkg.github.com/novium/airfoil/worker:1571999994'
     deploy:
@@ -21,6 +32,8 @@ services:
       resources:
         reservations:
           cpus: '1.0'
+    networks:
+      - broker
   data:
     image: 'minio/minio:latest'
     volumes:
@@ -30,24 +43,32 @@ services:
       MINIO_SECRET_KEY: minio123
     command: server /data
     deploy:
+      labels:
+        - "traefik.http.routers.data.rule=Host(`data.cloud.dev.novium.pw`)"
+        - "traefik.http.services.data-service.loadbalancer.server.port=9000"
       placement:
         constraints:
           - node.role == manager
-    labels:
-      - "traefik.http.routers.data.rule=Host(`data.cloud.dev.novium.pw`)"
     networks:
       - broker
   db:
     image: 'mysql:8.0.18'
+    environment:
+      MYSQL_ROOT_PASSWORD: '123'
+    volumes:
+      - mysql-data:/var/lib/mysql
     deploy:
       placement:
         constraints:
           - node.role == manager
+    networks:
+      - broker
   web:
-    image: 'docker.pkg.github.com/novium/airfoil/web_ui:1572249176'
-    labels:
-      - "traefik.http.routers.web.rule=Host(`cloud.dev.novium.pw`)"
+    image: 'docker.pkg.github.com/novium/airfoil/web_ui:1572250288'
     deploy:
+      labels:
+        - "traefik.http.routers.web.rule=Host(`cloud.dev.novium.pw`)"
+        - "traefik.http.services.web-service.loadbalancer.server.port=80"
       placement:
         constraints:
           - node.role == manager
@@ -55,7 +76,7 @@ services:
       - broker
   proxy:
     image: traefik:v2.0
-    command: --api.insecure=true --providers.docker
+    command: --api.insecure=true --providers.docker --providers.docker.swarmMode=true
     ports:
       - 80:80
       - 8080:8080
@@ -73,3 +94,4 @@ networks:
 
 volumes:
   minio-data:
+  mysql-data:

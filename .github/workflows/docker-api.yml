@@ -1,0 +1,20 @@
+name: Build API Docker Image
+
+on:
+  push:
+    paths:
+    - 'api/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build the Docker image
+      run: |
+        cd api
+        TIME=$(date +%s)
+        docker login docker.pkg.github.com -u novium -p ${{ secrets.GITHUB_TOKEN }}
+        docker build . --file Dockerfile --tag docker.pkg.github.com/novium/airfoil/api:$TIME
+        docker push docker.pkg.github.com/novium/airfoil/api:$TIME

@@ -1,6 +1,7 @@
 from flask import Flask, request, abort
 import mysql.connector
 import json
+import time
 
 api = Flask(__name__)
 
@@ -8,14 +9,17 @@ db_host = 'db'
 db_user = 'root'
 db_password = '123'
 
+print("Starting API server")
 while True:  # API has to wait for the database to setup before connecting
     try:
+        print("Connecting to DB")
         db = mysql.connector.connect(
             host=db_host,
             user=db_user,
             password=db_password,
             database='airfoil'
         )
+        time.sleep(3)
         print("Connected to database.")
         break
     except mysql.connector.errors.ProgrammingError:
@@ -37,6 +41,8 @@ while True:  # API has to wait for the database to setup before connecting
         ''')
         print("Database created.")
     except mysql.connector.errors.InterfaceError:
+        pass
+    except mysql.connector.errors.DatabaseError:
         pass
 
 cursor = db.cursor(prepared=True)
