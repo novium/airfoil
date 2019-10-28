@@ -63,11 +63,14 @@ def caculate(angle):
 
     #update mysql status
     try:
-        sql = "INSERT INTO airfoil.results (angle, status, url) VALUES ("+str(angle)+", 'computing', 'url')"
+        sql="UPDATE airfoil.results SET status = 'computing' WHERE angle = '"+str(angle)+"'"
         mycursor.execute(sql)
         db.commit()
     except:
         pass
+        #sql = "INSERT INTO airfoil.results (angle, status, url) VALUES ("+str(angle)+", 'computing', 'url')"
+        #mycursor.execute(sql)
+        #db.commit()
 
     #generate mash
     generate_mash="cd ./murtazo/cloudnaca && ./runme.sh"+" "+str(angle)+" "+str(angle)+" 1"+" 200 3"
