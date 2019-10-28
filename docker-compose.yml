@@ -1,26 +1,41 @@
-version: '3.7'
+version: "3.7"
 services:
   broker:
-    image: 'rabbitmq:3.8.0'
+    image: "rabbitmq:3.8.0"
     restart: always
-    networks: 
+    networks:
       - broker
   worker:
-    build: './worker'
+    build: "./worker"
   data:
-    image: 'minio/minio:latest'
+    image: "minio/minio:latest"
   db:
-    image: 'mysql:8.0.18'
-  web:
-    image: 'nginx:latest'
+    image: "mysql:8.0.18"
+    environment:
+      MYSQL_ROOT_PASSWORD: "123"
+      MYSQL_TCP_PORT: 3306
+    networks:
+      - broker
+  api:
+    build: "./api/"
+    ports:
+      - 81:80
+    networks:
+      - broker
     volumes:
-      - type: 'bind'
-        source: './web_ui/html'
-        target: '/usr/share/nginx/html'
-      - type: 'bind'
-        source: './web_ui/conf'
-        target: '/usr/share/nginx/conf'
+      - type: bind
+        source: ./api
+        target: /usr/src/app
+  web:
+    image: "nginx:latest"
+    volumes:
+      - type: "bind"
+        source: "./web_ui/html"
+        target: "/usr/share/nginx/html"
+      - type: "bind"
+        source: "./web_ui/conf"
+        target: "/usr/share/nginx/conf"
     ports:
       - 80:80
 networks:
-  broker: 
+  broker:
