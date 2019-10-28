@@ -3,6 +3,8 @@ import mysql.connector
 import json
 import time
 
+from tasks import celery, calculate
+
 api = Flask(__name__)
 
 db_host = 'db'
@@ -98,8 +100,9 @@ def create_job():
             )
     else:
         # TODO: If result is not in DB, call Airfoil with `angle`
-
-        status = 'computing'
+        calculate.delay(angle)
+        
+        status = 'created'
         cursor.execute(
             'INSERT INTO results (angle, status) VALUES (%s, %s);',
             (angle, status)

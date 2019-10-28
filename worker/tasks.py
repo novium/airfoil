@@ -20,13 +20,11 @@ db = mysql.connector.connect(
             user='root',
             password='123')
 mycursor = db.cursor(buffered=True)
+
 mycursor.execute('CREATE DATABASE IF NOT EXISTS airfoil')
-db = mysql.connector.connect(
-            host='db',
-            user='root',
-            password='123',
-            database='airfoil')
-mycursor = db.cursor(buffered=True)
+
+db.commit()
+
 mycursor.execute('''
             CREATE TABLE IF NOT EXISTS airfoil.results (
                 id INT AUTO_INCREMENT PRIMARY KEY,
