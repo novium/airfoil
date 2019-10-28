@@ -4,6 +4,7 @@ on:
   push:
     paths:
     - 'api/**'
+    - 'worker/**'
 
 jobs:
   build:

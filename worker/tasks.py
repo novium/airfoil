@@ -3,7 +3,6 @@ import mysql.connector
 import os
 from minio import Minio
 from datetime import timedelta
-import numpy
 from minio.error import (ResponseError, BucketAlreadyOwnedByYou,
                          BucketAlreadyExists)
 
