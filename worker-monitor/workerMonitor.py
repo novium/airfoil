@@ -20,6 +20,7 @@ WORKERS_UPPER_LIMIT = 0.5
 WORKERS_LOWER_LIMIT = 0.1
 WORKERS_MIN         = 1
 WORKERS_STEP        = 2
+WORKERS_PANIC_STEP  = 4
 WORKERS_NAME        = socket.gethostname()
 RELEASE_CALLS       = 5
 
@@ -218,6 +219,8 @@ def createWorkerCL( workerName ):
     cmd = "celery -A ctweetsw worker -n celery@" + workerName + " --quiet &"
     os.system( cmd )
 
+    time.sleep(1.5)
+
 
 def removeWorkerCL( workerName ):
     print( "\tReleasing: ", workerName )
@@ -225,10 +228,11 @@ def removeWorkerCL( workerName ):
     cmdRes = os.system( cmd )
 
 
-def addMoreWorkers( allWorkers ):
+def addMoreWorkers( allWorkers, panic ):
     print( "Adding more workes." )
 
-    for w in range(WORKERS_STEP):
+    upperLimit = WORKERS_PANIC_STEP if panic else WORKERS_STEP
+    for w in range(upperLimit):
         workerName = WORKERS_NAME + "-" + str(w +1 + len(allWorkers) )
         createWorkerCL( workerName )
 
@@ -310,15 +314,17 @@ def monitorWorkers( manager ):
 
         if numWorkers != 0:
             utilization = numTasks / numWorkers
+        panic = (utilization > 1)
+        
         print( "Workers     :", numWorkers )
         print( "Tasks       :", numTasks )
-        if utilization > 1:
+        if panic:
             print( "Utilization : %3.1f %%  Panic!!! " % (utilization * 100.0) )
         else:
             print( "Utilization : %3.1f %%" % (utilization * 100.0) )
 
         if( utilization >= WORKERS_UPPER_LIMIT ):
-            addMoreWorkers( allWorkers )
+            addMoreWorkers( allWorkers, panic )
         else:
             if( utilization <= WORKERS_LOWER_LIMIT and numWorkers > WORKERS_MIN ):
                 releaseWorkers( allWorkers, busyWorkers )
@@ -328,6 +334,6 @@ def monitorWorkers( manager ):
 
 
 
-#removeWorkerVM( "gnentid-python-vm2" )
-#createWorkerVM( "gnentid-python-vm2" )
+#removeWorkerVM( "gnentid-lab3-v2" )
+#createWorkerVM( "gnentid-lab3-v2" )
 monitorWorkers( BROKER_URL )
