@@ -56,7 +56,7 @@ def upload_result(angle):
 
 
 @celery.task
-def caculate(angle):
+def calculate(angle):
 
     #update mysql status
     try:
@@ -66,15 +66,15 @@ def caculate(angle):
     except:
         pass
 
-    #generate mash
-    generate_mash="cd ./murtazo/cloudnaca && ./runme.sh"+" "+str(angle)+" "+str(angle)+" 1"+" 200 3"
-    os.system(generate_mash)
+    #generate mesh
+    generate_mesh="cd ./murtazo/cloudnaca && ./runme.sh"+" "+str(angle)+" "+str(angle)+" 1"+" 200 3"
+    os.system(generate_mesh)
 
-    #convert mash file
-    mashfile='./murtazo/cloudnaca/msh/r2a'+str(angle)+'n200.msh'
+    #convert mesh file
+    meshfile='./murtazo/cloudnaca/msh/r2a'+str(angle)+'n200.msh'
     xmlfile='./murtazo/cloudnaca/msh/r2a'+str(angle)+'n200.xml'
 
-    generate_xml='dolfin-convert '+mashfile+' '+xmlfile
+    generate_xml='dolfin-convert '+meshfile+' '+xmlfile
     os.system(generate_xml)
 
     run_airfoil='./murtazo/navier_stokes_solver/airfoil  10 0.0001 10. 0.01 '+xmlfile
