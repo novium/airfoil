@@ -1,10 +1,23 @@
-Airfoil, Dockerfile and docker-compose.yml in the same dir /home/a/.
-(I have to type the full dir, or it won't be linked, weird.)
-In Airfoil, murtazo already unziped and runme.sh already edited
+murtazo.tgz & tasks.py & Dockerfile in this folder, dockercompose.yml at root dir.
 
-After docker-compose up, using docker ps can see only have minio running. 
-So I use docker-compose run worker /bin/bash, but the CMD[] in dockerfile didn't run so I just type them in.
+Install numpy in python 2.7 (foe runme.sh), others in python3
 
-In tasks.py, in this scrip didn't use celery, call with angel 12.
+Changed parameter and now a call lasts 20 secound in my virtubox, can make it longer if you want.
 
-And in tasks.py, the function to upload to minio doesn't work.. connection refused I think??
+Locally checked by:
+docker-compose rm -f -s worker
+docker-compose build --no-cache worker
+docker-compose up -d broker
+docker-compose up
+
+enter container and python:
+
+send celery request and enter settings of database and minio:
+
+minioClient.list_buckets()
+myresult = mycursor.fetchall()
+for x in myresult:
+  print(x)
+  
+  
+Both works.

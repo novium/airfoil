@@ -1,21 +1,37 @@
 version: "3.7"
 services:
+  broker:
+    image: 'rabbitmq:3.8.0'
+    restart: always
+    ports:
+      - "5672:5672"
+    networks: 
+      - broker
+  db:
+    image: "mysql:8.0.18"
+    environment:
+      MYSQL_ROOT_PASSWORD: "123"
+      MYSQL_TCP_PORT: 3306
+    networks:
+      - broker
   data:
     image: 'minio/minio:latest'
+    hostname: data
     environment: 
       MINIO_ACCESS_KEY: "admin"
       MINIO_SECRET_KEY: "asdhgrwert12"
-    restart: always
-    ports:
-      - "9000:9000"
+    restart: unless-stopped
+    networks: 
+      - broker
+    command: server data
 
   worker:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    ports:
-      - "9000":"9000"
+    build: './unsuccessful-worker'
     volumes: 
       - type: bind
-        source: /home/a/Airfoil
-        target: /fenicsworker
+        source: ./unsuccessful-worker
+        target: /home/fenics/unsuccessful-worker
+    networks: 
+      - broker
+networks:
+  broker: 

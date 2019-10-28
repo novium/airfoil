@@ -1,14 +1,41 @@
 from celery import Celery
+import mysql.connector
 import os
-from datetime import timedelta
 from minio import Minio
+from datetime import timedelta
+import numpy
 from minio.error import (ResponseError, BucketAlreadyOwnedByYou,
                          BucketAlreadyExists)
 
-minioClient = Minio('data',
+minioClient = Minio('data:9000',
                   access_key='admin',
                   secret_key='asdhgrwert12',
-                  secure=TRUE)
+                  secure=False)
+
+celery = Celery(__name__, broker='amqp://guest:guest@broker',backend='rpc://')
+
+### Double check if database and table exists, else build it
+db = mysql.connector.connect(
+            host='db',
+            user='root',
+            password='123')
+mycursor = db.cursor(buffered=True)
+mycursor.execute('CREATE DATABASE IF NOT EXISTS airfoil')
+db = mysql.connector.connect(
+            host='db',
+            user='root',
+            password='123',
+            database='airfoil')
+mycursor = db.cursor(buffered=True)
+mycursor.execute('''
+            CREATE TABLE IF NOT EXISTS airfoil.results (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                angle FLOAT(20, 10),
+                status TEXT,
+                url TEXT
+            )
+        ''')
+
 
 #to upload result to minio
 def upload_result(angle):
@@ -30,19 +57,25 @@ def upload_result(angle):
     return str(downloadurl)
 
 
-celery = Celery(__name__, broker='pyamqp://',backend='rpc://')
-
 
 @celery.task
 def caculate(angle):
+
+    #update mysql status
+    try:
+        sql = "INSERT INTO airfoil.results (angle, status, url) VALUES ("+str(angle)+", 'computing', 'url')"
+        mycursor.execute(sql)
+        db.commit()
+    except:
+        pass
 
     #generate mash
     generate_mash="cd ./murtazo/cloudnaca && ./runme.sh"+" "+str(angle)+" "+str(angle)+" 1"+" 200 3"
     os.system(generate_mash)
 
     #convert mash file
-    mashfile='./murtazo/cloudnaca/msh/r3a'+str(angle)+'n200.msh'
-    xmlfile='./murtazo/cloudnaca/msh/r3a'+str(angle)+'n200.xml'
+    mashfile='./murtazo/cloudnaca/msh/r2a'+str(angle)+'n200.msh'
+    xmlfile='./murtazo/cloudnaca/msh/r2a'+str(angle)+'n200.xml'
 
     generate_xml='dolfin-convert '+mashfile+' '+xmlfile
     os.system(generate_xml)
@@ -61,6 +94,21 @@ def caculate(angle):
     os.system("rm -r results")
     os.system("rm -r results.tar.gz")
 
+    #Update URL in db
+    try:
+        sql="UPDATE airfoil.results SET url = '"+miniourl+"' WHERE angle = '"+str(angle)+"'"
+        mycursor.execute(sql)
+        db.commit()
+        #Update status in db
+        try:
+            sql="UPDATE airfoil.results SET status = 'done' WHERE angle = '"+str(angle)+"'"
+            mycursor.execute(sql)
+            db.commit()
+        except:
+            db.rollback()
+    except:
+        pass
+
     return miniourl
 
-#caculate(12)
+#calculate(12)
