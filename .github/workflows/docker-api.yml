@@ -4,6 +4,7 @@ on:
   push:
     paths:
     - 'api/**'
+    - 'worker/**'
 
 jobs:
   build:
@@ -16,5 +17,6 @@ jobs:
         cd api
         TIME=$(date +%s)
         docker login docker.pkg.github.com -u novium -p ${{ secrets.GITHUB_TOKEN }}
+        cp ../worker/tasks.py tasks.py
         docker build . --file Dockerfile --tag docker.pkg.github.com/novium/airfoil/api:$TIME
         docker push docker.pkg.github.com/novium/airfoil/api:$TIME

@@ -3,30 +3,32 @@ import mysql.connector
 import os
 from minio import Minio
 from datetime import timedelta
-import numpy
 from minio.error import (ResponseError, BucketAlreadyOwnedByYou,
                          BucketAlreadyExists)
 
+db_host = 'db'
+db_user = 'root'
+db_password = '123'
+
 minioClient = Minio('data:9000',
-                  access_key='admin',
-                  secret_key='asdhgrwert12',
+                  access_key='minio',
+                  secret_key='minio123',
                   secure=False)
 
 celery = Celery(__name__, broker='amqp://guest:guest@broker',backend='rpc://')
 
 ### Double check if database and table exists, else build it
 db = mysql.connector.connect(
-            host='db',
-            user='root',
-            password='123')
+    host=db_host,
+    user=db_user,
+    password=db_password
+)
 mycursor = db.cursor(buffered=True)
+
 mycursor.execute('CREATE DATABASE IF NOT EXISTS airfoil')
-db = mysql.connector.connect(
-            host='db',
-            user='root',
-            password='123',
-            database='airfoil')
-mycursor = db.cursor(buffered=True)
+
+db.commit()
+
 mycursor.execute('''
             CREATE TABLE IF NOT EXISTS airfoil.results (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -59,7 +61,7 @@ def upload_result(angle):
 
 
 @celery.task
-def caculate(angle):
+def calculate(angle):
 
     #update mysql status
     try:
@@ -72,15 +74,15 @@ def caculate(angle):
         #mycursor.execute(sql)
         #db.commit()
 
-    #generate mash
-    generate_mash="cd ./murtazo/cloudnaca && ./runme.sh"+" "+str(angle)+" "+str(angle)+" 1"+" 200 3"
-    os.system(generate_mash)
+    #generate mesh
+    generate_mesh="cd ./murtazo/cloudnaca && ./runme.sh"+" "+str(angle)+" "+str(angle)+" 1"+" 200 3"
+    os.system(generate_mesh)
 
-    #convert mash file
-    mashfile='./murtazo/cloudnaca/msh/r2a'+str(angle)+'n200.msh'
+    #convert mesh file
+    meshfile='./murtazo/cloudnaca/msh/r2a'+str(angle)+'n200.msh'
     xmlfile='./murtazo/cloudnaca/msh/r2a'+str(angle)+'n200.xml'
 
-    generate_xml='dolfin-convert '+mashfile+' '+xmlfile
+    generate_xml='dolfin-convert '+meshfile+' '+xmlfile
     os.system(generate_xml)
 
     run_airfoil='./murtazo/navier_stokes_solver/airfoil  10 0.0001 10. 0.01 '+xmlfile
