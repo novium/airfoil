@@ -7,7 +7,7 @@ async function createNewJob() {
     let result;
 
     $('#create-job').fadeOut(fadeTime);
-    let create_job = await $.get('http://api.dev.cloud.novium.pw/create_job?angle=' + $('angle-input').val());
+    let create_job = await $.get('http://api.cloud.dev.novium.pw/create_job?angle=' + $('angle-input').val());
     create_job = JSON.parse(create_job);
     
     if(create_job.status != 'done') {
@@ -22,7 +22,7 @@ async function createNewJob() {
         let result;
         let w = 20;
         while(true) {
-            result = $.get('http://api.dev.cloud.novium.pw/get?id=' + current_job.id);
+            result = $.get('http://api.cloud.dev.novium.pw/get?id=' + current_job.id);
             result = JSON.parse(result);
 
             if(result.status == 'created') {
