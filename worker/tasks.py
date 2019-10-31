@@ -75,12 +75,12 @@ def calculate(angle):
         #db.commit()
 
     #generate mesh
-    generate_mesh="cd ../murtazo/cloudnaca && ./runme.sh"+" "+str(angle)+" "+str(angle)+" 1"+" 200 3"
+    generate_mesh="cd ../murtazo/cloudnaca && ./runme.sh " + str(int(angle)) + " " + str(int(angle)) + " 1 200 3"
     os.system(generate_mesh)
 
     #convert mesh file
-    meshfile='../murtazo/cloudnaca/msh/r2a'+str(angle)+'n200.msh'
-    xmlfile='../murtazo/cloudnaca/msh/r2a'+str(angle)+'n200.xml'
+    meshfile='../murtazo/cloudnaca/msh/r2a'+str(int(angle))+'n200.msh'
+    xmlfile='../murtazo/cloudnaca/msh/r2a'+str(int(angle))+'n200.xml'
 
     generate_xml='dolfin-convert '+meshfile+' '+xmlfile
     os.system(generate_xml)
