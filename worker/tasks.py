@@ -24,12 +24,9 @@ db = mysql.connector.connect(
     password=db_password,
     autocommit=True
 )
-mycursor = db.cursor(buffered=True)
+mycursor = db.cursor()
 
 mycursor.execute('CREATE DATABASE IF NOT EXISTS airfoil')
-
-db.commit()
-
 mycursor.execute('''
             CREATE TABLE IF NOT EXISTS airfoil.results (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -38,8 +35,6 @@ mycursor.execute('''
                 url TEXT
             )
         ''')
-
-db.commit()
 
 #to upload result to minio
 def upload_result(angle):
@@ -69,7 +64,6 @@ def calculate(id_, angle):
     try:
         sql="UPDATE airfoil.results SET status = 'computing' WHERE id = '" + str(id_) + "'"
         mycursor.execute(sql)
-        db.commit()
     except:
         pass
         #sql = "INSERT INTO airfoil.results (angle, status, url) VALUES ("+str(angle)+", 'computing', 'url')"
@@ -104,10 +98,9 @@ def calculate(id_, angle):
     #Update URL in db
     sql="UPDATE airfoil.results SET status='done' WHERE id = '" + str(id_) + "'"
     mycursor.execute(sql)
-    db.commit()
+
     sql="UPDATE airfoil.results SET url='" + str(miniourl) + "' WHERE id = '" + str(id_) + "'"
     mycursor.execute(sql)
-    db.commit()
 
     return miniourl
 
