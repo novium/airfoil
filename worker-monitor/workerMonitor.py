@@ -18,7 +18,7 @@ from keystoneauth1 import session
 BROKER_URL = "pyamqp://airfoil:airfoil@192.168.1.26/airfoil"
 WORKERS_UPPER_LIMIT = 0.5
 WORKERS_LOWER_LIMIT = 0.1
-WORKERS_MIN         = 1
+WORKERS_MIN         = 2
 WORKERS_MAX         = 10
 WORKERS_STEP        = 2
 WORKERS_PANIC_STEP  = 4
@@ -33,13 +33,13 @@ releaseCalls = 0
 
 def signal_handler(sig, frame):
     print( "\nShutting down..." )
-    sys.exit(0)
+    quit()
 
 signal.signal(signal.SIGINT, signal_handler)
 
 
 def execCommand( cmd ):
-    print( '\bExecuting: ' + cmd )
+    print( '\tExecuting: ' + cmd )
 
     resOutput = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    
     lines = [x.decode('utf8').strip() for x in resOutput.stdout.readlines()]
@@ -287,19 +287,24 @@ def releaseWorkers( allWorkers, busyWorkers ):
 def monitorWorkers( manager ):
     print( "Monitorig: " + manager )
 
-    app = Celery('tweetsApp',
-             backend='rpc://',
-             broker=manager)
-
     while True:
         numWorkers = 0
         numTasks   = 0
         utilization = 0
         busyWorkers = []
         allWorkers  = []
+
+        app = Celery('airfoilApp', backend='rpc://', broker=manager)
         inspect = app.control.inspect()
 
-        workers = inspect.ping()
+        try:
+            workers = inspect.ping()
+        except:
+            print("\tReconnecting...")
+            app = Celery('airfoilApp', backend='rpc://', broker=manager)
+            inspect = app.control.inspect()
+            workers = inspect.ping()
+
         if not workers is None: 
             numWorkers = len( workers )
             for worker in workers:
@@ -351,7 +356,8 @@ def monitorWorkers( manager ):
 
 
 
-#removeWorkerVM( "gnentid-lab3-v2" )
-#createWorkerVM( "gnentid-lab3-v2" )
+#removeWorkerVM( "gnentid-lab3-v1-1" )
+#removeWorkerVM( "gnentid-lab3-v1-2" )
+createWorkerVM( "gnentid-lab3-v1-1" )
+createWorkerVM( "gnentid-lab3-v1-2" )
 monitorWorkers( BROKER_URL )
-
