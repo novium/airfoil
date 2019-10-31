@@ -2,6 +2,8 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Creates a new job, waits for the computation to finish and reports back the URL from where
+// the results can be downloaded.
 async function createNewJob() {
     const fadeTime = 400;
     let result;
@@ -15,10 +17,6 @@ async function createNewJob() {
         $('#wait-job').fadeIn(fadeTime)
         await sleep(fadeTime);
 
-        /* for(let i = 0; i <= 100; i += 10) {
-            $('#progress-bar').width(i + '%');
-            await sleep(1000);
-        } */
         let result;
         let w = 20;
         while(true) {

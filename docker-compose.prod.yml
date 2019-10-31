@@ -1,5 +1,11 @@
+# Airfoil-as-a-Service
+# Usage: docker stack publish -c docker-compose.prod.yml --with-registry-auth
+# REQUIRES YOU TO PUBLISH THE PACKAGES / AUTHENTICATE WITH GITHUB
+# Token is not provided here.
+
 version: '3.7'
 services:
+  # RabbitMQ broker for Celery
   broker:
     image: 'rabbitmq:3.8.0'
     restart: always
@@ -15,8 +21,10 @@ services:
       placement:
         constraints:
           - node.role == manager
+  
+  # REST API
   api:
-    image: 'docker.pkg.github.com/novium/airfoil/api:1572548126'
+    image: 'docker.pkg.github.com/novium/airfoil/api:1572553024'
     deploy:
       labels:
         - "traefik.http.routers.api.rule=Host(`api.cloud.dev.novium.pw`)"
@@ -26,17 +34,23 @@ services:
           - node.role == manager
     networks:
       - broker
+  
+  # Celery Worker (Computes airfoil)
+  # SPECIAL: Deployed globally, on non-manager nodes, reserves 1 CPU
   worker:
-    image: 'docker.pkg.github.com/novium/airfoil/worker:1572548123'
+    image: 'docker.pkg.github.com/novium/airfoil/worker:1572553025'
     networks:
       - broker
     deploy:
+      mode: global
       placement:
         constraints:
           - node.role != manager
       resources:
         reservations:
           cpus: '1.0'
+  
+  # Object-Storage
   data:
     image: 'minio/minio:latest'
     volumes:
@@ -54,6 +68,8 @@ services:
           - node.role == manager
     networks:
       - broker
+  
+  # MySQL Database
   db:
     image: 'mysql:8.0.18'
     environment:
@@ -66,6 +82,8 @@ services:
           - node.role == manager
     networks:
       - broker
+  
+  # Web interface
   web:
     image: 'docker.pkg.github.com/novium/airfoil/web_ui:1572544586'
     deploy:
@@ -77,6 +95,8 @@ services:
           - node.role == manager
     networks:
       - broker
+  
+  # Traefik Reverse-Proxy
   proxy:
     image: traefik:v2.0
     command: --api.insecure=true --providers.docker --providers.docker.swarmMode=true
