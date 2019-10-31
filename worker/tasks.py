@@ -15,7 +15,7 @@ minioClient = Minio('data:9000',
                   secret_key='minio123',
                   secure=False)
 
-celery = Celery(__name__, broker='amqp://guest:guest@broker',backend='rpc://')
+celery = Celery(__name__, broker='amqp://airfoil:airfoil@broker/airfoil',backend='rpc://')
 
 ### Double check if database and table exists, else build it
 db = mysql.connector.connect(
