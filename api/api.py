@@ -1,4 +1,5 @@
 from flask import Flask, request, abort
+from flask_cors import CORS
 import mysql.connector
 import json
 import time
@@ -6,6 +7,7 @@ import time
 from tasks import celery, calculate
 
 api = Flask(__name__)
+CORS(api)
 
 db_host = 'db'
 db_user = 'root'

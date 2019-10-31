@@ -1,5 +1,5 @@
 FROM python:buster
-RUN pip3 install flask mysql-connector-python celery minio
+RUN pip3 install flask mysql-connector-python celery minio flask-cors
 
 
 WORKDIR /usr/src/app
