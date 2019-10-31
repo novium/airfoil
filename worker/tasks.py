@@ -38,6 +38,7 @@ mycursor.execute('''
             )
         ''')
 
+db.commit()
 
 #to upload result to minio
 def upload_result(angle):
@@ -62,7 +63,7 @@ def upload_result(angle):
 
 @celery.task
 def calculate(id_, angle):
-
+    print("Running task with id: " + id_)
     #update mysql status
     try:
         sql="UPDATE airfoil.results SET status = 'computing' WHERE id = '"+id_+"'"
@@ -100,19 +101,10 @@ def calculate(id_, angle):
     os.system("rm -r results.tar.gz")
 
     #Update URL in db
-    try:
-        sql="UPDATE airfoil.results SET url = '"+miniourl+"' WHERE id = '"+id_+"'"
-        mycursor.execute(sql)
-        db.commit()
-        #Update status in db
-        try:
-            sql="UPDATE airfoil.results SET status = 'done' WHERE id = '"+id_+"'"
-            mycursor.execute(sql)
-            db.commit()
-        except:
-            db.rollback()
-    except:
-        pass
+    sql="UPDATE airfoil.results SET status='done', url = '"+miniourl+"' WHERE id = '"+id_+"'"
+    mycursor.execute(sql)
+    db.commit()
+
 
     return miniourl
 
