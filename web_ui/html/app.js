@@ -40,6 +40,8 @@ async function createNewJob() {
             if(result.status == 'done') {
                 break;
             }
+
+            await sleep(1000);
         }
         $('#progress-bar').addClass('bg-success');
 
