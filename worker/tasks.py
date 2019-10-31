@@ -21,7 +21,8 @@ celery = Celery(__name__, broker='amqp://airfoil:airfoil@broker/airfoil',backend
 db = mysql.connector.connect(
     host=db_host,
     user=db_user,
-    password=db_password
+    password=db_password,
+    autocommit=True
 )
 mycursor = db.cursor(buffered=True)
 
