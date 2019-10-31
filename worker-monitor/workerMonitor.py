@@ -19,6 +19,7 @@ BROKER_URL = "pyamqp://airfoil:airfoil@192.168.1.26/airfoil"
 WORKERS_UPPER_LIMIT = 0.5
 WORKERS_LOWER_LIMIT = 0.1
 WORKERS_MIN         = 1
+WORKERS_MAX         = 10
 WORKERS_STEP        = 2
 WORKERS_PANIC_STEP  = 4
 WORKERS_NAME        = socket.gethostname()
@@ -339,7 +340,7 @@ def monitorWorkers( manager ):
         else:
             print( "Utilization : %3.1f %%" % (utilization * 100.0) )
 
-        if( utilization >= WORKERS_UPPER_LIMIT ):
+        if( utilization >= WORKERS_UPPER_LIMIT and numWorkers < WORKERS_MAX ):
             addMoreWorkers( allWorkers, panic )
         else:
             if( utilization <= WORKERS_LOWER_LIMIT and numWorkers > WORKERS_MIN ):
