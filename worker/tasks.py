@@ -101,10 +101,12 @@ def calculate(id_, angle):
     os.system("rm -r results.tar.gz")
 
     #Update URL in db
-    sql="UPDATE airfoil.results SET status='done', url = '"+miniourl+"' WHERE id = '"+str(id_)+"'"
+    sql="UPDATE airfoil.results SET status='done' WHERE id = '" + str(id_) + "'"
     mycursor.execute(sql)
     db.commit()
-
+    sql="UPDATE airfoil.results SET url='" + str(miniourl) + "' WHERE id = '" + str(id_) + "'"
+    mycursor.execute(sql)
+    db.commit()
 
     return miniourl
 
