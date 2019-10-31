@@ -15,7 +15,7 @@ from keystoneauth1 import loading
 from keystoneauth1 import session
 
 # Some operation constants.
-BROKER_URL = "pyamqp://tweets:tweets@192.168.1.26/tweets"
+BROKER_URL = "pyamqp://airfoil:airfoil@192.168.1.26/airfoil"
 WORKERS_UPPER_LIMIT = 0.5
 WORKERS_LOWER_LIMIT = 0.1
 WORKERS_MIN         = 1
@@ -23,6 +23,7 @@ WORKERS_STEP        = 2
 WORKERS_PANIC_STEP  = 4
 WORKERS_NAME        = socket.gethostname()
 RELEASE_CALLS       = 5
+CLOUD_CFG_TXT       = 'cloud-cfg.dummy.txt' #'cloud-cfg.txt'
 
 # Workers info.
 numWorkers   = 0
@@ -75,9 +76,12 @@ def createWorkerVM( workerName ):
                                     project_id=env['OS_PROJECT_ID'],
                                     user_domain_name=env['OS_USER_DOMAIN_NAME'])
 
+    # Start measuring time.
+    startTime = time.time()
+
     sess = session.Session(auth=auth)
     nova = client.Client('2.1', session=sess)
-    print( "User authorization completed." )
+    print( "\tUser authorization completed." )
 
     image = nova.glance.find_image(image_name)
     #image = nova.images.find(name=image_name)
@@ -92,8 +96,8 @@ def createWorkerVM( workerName ):
         sys.exit("private-net not defined.")
 
     #print("Path at terminal when executing this file")
-    print( os.getcwd() + "\n" )
-    cfg_file_path =  os.getcwd()+'/cloud-cfg.txt'
+    #print( os.getcwd() + "\n" )
+    cfg_file_path =  os.getcwd()+ '/' + CLOUD_CFG_TXT
     if os.path.isfile(cfg_file_path):
         userdata = open(cfg_file_path)
     else:
@@ -101,15 +105,15 @@ def createWorkerVM( workerName ):
 
     secgroups = ['default', 'GNentid_SecurityGroupL1']
 
-    print( "Creating instance ... " )
+    print( "\tCreating instance ... " )
     instance = nova.servers.create(name=workerName, image=image, flavor=flavor, userdata=userdata, nics=nics, security_groups=secgroups, key_name=key_pair)
     #instance = nova.servers.create(name="GNentid_Python_vm1", image=image, flavor=flavor, nics=nics, security_groups=secgroups, key_name=key_pair)
     inst_status = instance.status
-    print( "waiting for 10 seconds.. " )
+    #print( "\twaiting for 10 seconds.. " )
     time.sleep(10)
 
     while inst_status == 'BUILD':
-        print( "Instance: "+instance.name+" is in "+inst_status+" state, sleeping for 5 seconds more..." )
+        print( "\tInstance: "+instance.name+" is in "+inst_status+" state, sleeping for 5 seconds more..." )
         time.sleep(5)
         instance = nova.servers.get(instance.id)
         inst_status = instance.status
@@ -118,7 +122,19 @@ def createWorkerVM( workerName ):
     #print( "Assigning floating ip " + floating_ip )
     #instance.add_floating_ip(floating_ip)
 
-    print( "Instance: "+ instance.name +" is in " + inst_status + " state" )
+    print( "\tInstance: "+ instance.name +" is in " + inst_status + " state" )
+
+    # Now wait for the VM to join the swarm.
+    print( "\tWaiting for the instance to join ... " )
+    started = False
+    cmd = 'sudo docker node list | grep ' + instance.name + ' > /dev/null'
+    while not started:
+        time.sleep(10)
+        res = os.system( cmd )
+        started = True if res == 0 else False
+
+    endTime = time.time()
+    print( "\tInstance created and joined in : {} seconds".format(endTime-startTime) )
     return( True )
 
 
@@ -137,18 +153,18 @@ def removeVM( workerName ):
 
     sess = session.Session(auth=auth)
     nova = client.Client('2.1', session=sess)
-    print( "User authorization completed." )
+    print( "\tUser authorization completed." )
     
     # Remove the instance.
     servers = nova.servers.list(search_opts={'name': workerName})
     for instance in servers:
 
         inst_status = instance.status
-        print( "Instance: "+ instance.name +" is in " + inst_status + " state" )
+        print( "\tInstance: "+ instance.name +" is in " + inst_status + " state" )
         instance.delete()
 
         while inst_status == 'ACTIVE':
-            print( "Instance: "+instance.name+" is in "+inst_status+" state, sleeping for 5 seconds more..." )
+            print( "\tInstance: "+instance.name+" is in "+inst_status+" state, sleeping for 5 seconds more..." )
             time.sleep(5)
             try:
                 instance = nova.servers.get(instance.id)
@@ -198,17 +214,17 @@ def removeWorkerVM( workerName ):
 
     # 1. Drain the worker
     if not drainWorker( workerName ):
-        print( "drainWorker failed.")
+        print( "\tdrainWorker failed.")
         return( False )
 
     # 2. Remove it from swarm
     if not removeSwarmWorker( workerName ):
-        print( "removeSwarmWorker failed.")
+        print( "\tremoveSwarmWorker failed.")
         return( False )
 
     # 3. Remove the VM
     if not removeVM( workerName ):
-        print( "removeVM failed")
+        print( "\tremoveVM failed")
         return( False )
 
     return( True )
@@ -337,3 +353,4 @@ def monitorWorkers( manager ):
 #removeWorkerVM( "gnentid-lab3-v2" )
 #createWorkerVM( "gnentid-lab3-v2" )
 monitorWorkers( BROKER_URL )
+
