@@ -74,10 +74,10 @@ def create_job():
     if status == 'done':  # Check in database if angle has already been computed
         cursor.execute('SELECT url FROM results WHERE angle=%s', (angle,))
         try:
-            return {
+            return json.dumps({
                 'url': str(next(cursor)[0]),
                 'status': status
-            }
+            })
         except StopIteration:
             abort(
                 400,
@@ -87,11 +87,11 @@ def create_job():
     elif status == 'computing':
         cursor.execute('SELECT id FROM results WHERE angle=' + str(angle) + ' LIMIT 1')
         try:
-            return {
+            return json.dumps({
                 'id': cursor.fetchall()[0][0],
                 'angle': angle,
                 'status': status
-            }
+            })
         except StopIteration:
             abort(
                 400,
@@ -101,7 +101,7 @@ def create_job():
     else:
         # TODO: If result is not in DB, call Airfoil with `angle`
         calculate.delay(angle)
-        
+
         status = 'created'
         cursor.execute(
             'INSERT INTO results (angle, status) VALUES (%s, %s);',
@@ -111,11 +111,11 @@ def create_job():
 
         cursor.execute('SELECT LAST_INSERT_ID()')
         try:
-            return {
+            return json.dumps({
                 'id': next(cursor)[0],
                 'angle': angle,
                 'status': status
-            }
+            })
         except StopIteration:
             return
 
@@ -134,10 +134,10 @@ def get():
     elif status == 'done':
         cursor.execute('SELECT url FROM results WHERE id=' + str(id) + ' LIMIT 1')
         try:
-            return {
+            return json.dumps({
                 'url': cursor.fetchall()[0][0],
                 'status': status
-            }
+            })
         except (StopIteration, IndexError):
             abort(
                 400,
@@ -145,10 +145,10 @@ def get():
                 fetching its url."""
             )
     else:
-        return {
+        return json.dumps({
             'url': None,
             'status': status
-        }
+        })
 
 
 #  Returns all running jobs and their status as a JSON formatted string
