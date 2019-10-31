@@ -63,10 +63,10 @@ def upload_result(angle):
 
 @celery.task
 def calculate(id_, angle):
-    print("Running task with id: " + id_)
+    print("Running task with id: " + str(id_))
     #update mysql status
     try:
-        sql="UPDATE airfoil.results SET status = 'computing' WHERE id = '"+id_+"'"
+        sql="UPDATE airfoil.results SET status = 'computing' WHERE id = '" + str(id_) + "'"
         mycursor.execute(sql)
         db.commit()
     except:
@@ -101,7 +101,7 @@ def calculate(id_, angle):
     os.system("rm -r results.tar.gz")
 
     #Update URL in db
-    sql="UPDATE airfoil.results SET status='done', url = '"+miniourl+"' WHERE id = '"+id_+"'"
+    sql="UPDATE airfoil.results SET status='done', url = '"+miniourl+"' WHERE id = '"+str(id_)+"'"
     mycursor.execute(sql)
     db.commit()
 
