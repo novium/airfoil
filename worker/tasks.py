@@ -61,11 +61,11 @@ def upload_result(angle):
 
 
 @celery.task
-def calculate(angle):
+def calculate(id_, angle):
 
     #update mysql status
     try:
-        sql="UPDATE airfoil.results SET status = 'computing' WHERE angle = '"+str(angle)+"'"
+        sql="UPDATE airfoil.results SET status = 'computing' WHERE id = '"+id_+"'"
         mycursor.execute(sql)
         db.commit()
     except:
@@ -101,12 +101,12 @@ def calculate(angle):
 
     #Update URL in db
     try:
-        sql="UPDATE airfoil.results SET url = '"+miniourl+"' WHERE angle = '"+str(angle)+"'"
+        sql="UPDATE airfoil.results SET url = '"+miniourl+"' WHERE id = '"+id_+"'"
         mycursor.execute(sql)
         db.commit()
         #Update status in db
         try:
-            sql="UPDATE airfoil.results SET status = 'done' WHERE angle = '"+str(angle)+"'"
+            sql="UPDATE airfoil.results SET status = 'done' WHERE id = '"+id_+"'"
             mycursor.execute(sql)
             db.commit()
         except:

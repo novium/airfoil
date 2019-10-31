@@ -102,8 +102,6 @@ def create_job():
             )
     else:
         # TODO: If result is not in DB, call Airfoil with `angle`
-        calculate.delay(angle)
-
         status = 'created'
         cursor.execute(
             'INSERT INTO results (angle, status) VALUES (%s, %s);',
@@ -112,9 +110,12 @@ def create_job():
         db.commit()
 
         cursor.execute('SELECT LAST_INSERT_ID()')
+        id_ = next(cursor)[0]
+        calculate.delay(id_, angle)
+
         try:
             return json.dumps({
-                'id': next(cursor)[0],
+                'id': id_,
                 'angle': angle,
                 'status': status
             })
