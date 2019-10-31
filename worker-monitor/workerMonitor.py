@@ -251,7 +251,7 @@ def addMoreWorkers( allWorkers, panic ):
     upperLimit = WORKERS_PANIC_STEP if panic else WORKERS_STEP
     for w in range(upperLimit):
         workerName = WORKERS_NAME + "-" + str(w +1 + len(allWorkers) )
-        createWorkerCL( workerName )
+        createWorkerVM( workerName )
 
     global releaseCalls
     releaseCalls = 0
@@ -280,7 +280,7 @@ def releaseWorkers( allWorkers, busyWorkers ):
     toRemove.sort()
     while len( toRemove ) > WORKERS_MIN:
         worker = toRemove[ len(toRemove) -1 ]
-        removeWorkerCL( worker )
+        removeWorkerVM( worker )
         toRemove.remove( worker )
 
 
