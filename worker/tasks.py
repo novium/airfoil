@@ -15,20 +15,18 @@ minioClient = Minio('data:9000',
                   secret_key='minio123',
                   secure=False)
 
-celery = Celery(__name__, broker='amqp://guest:guest@broker',backend='rpc://')
+celery = Celery(__name__, broker='amqp://airfoil:airfoil@broker/airfoil',backend='rpc://')
 
 ### Double check if database and table exists, else build it
 db = mysql.connector.connect(
     host=db_host,
     user=db_user,
-    password=db_password
+    password=db_password,
+    autocommit=True
 )
-mycursor = db.cursor(buffered=True)
+mycursor = db.cursor()
 
 mycursor.execute('CREATE DATABASE IF NOT EXISTS airfoil')
-
-db.commit()
-
 mycursor.execute('''
             CREATE TABLE IF NOT EXISTS airfoil.results (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -37,7 +35,6 @@ mycursor.execute('''
                 url TEXT
             )
         ''')
-
 
 #to upload result to minio
 def upload_result(angle):
@@ -61,13 +58,12 @@ def upload_result(angle):
 
 
 @celery.task
-def calculate(angle):
-
+def calculate(id_, angle):
+    print("Running task with id: " + str(id_))
     #update mysql status
     try:
-        sql="UPDATE airfoil.results SET status = 'computing' WHERE angle = '"+str(angle)+"'"
+        sql="UPDATE airfoil.results SET status = 'computing' WHERE id = '" + str(id_) + "'"
         mycursor.execute(sql)
-        db.commit()
     except:
         pass
         #sql = "INSERT INTO airfoil.results (angle, status, url) VALUES ("+str(angle)+", 'computing', 'url')"
@@ -75,17 +71,17 @@ def calculate(angle):
         #db.commit()
 
     #generate mesh
-    generate_mesh="cd ./murtazo/cloudnaca && ./runme.sh"+" "+str(angle)+" "+str(angle)+" 1"+" 200 3"
+    generate_mesh="cd ../murtazo/cloudnaca && ./runme.sh " + str(int(angle)) + " " + str(int(angle)) + " 1 200 3"
     os.system(generate_mesh)
 
     #convert mesh file
-    meshfile='./murtazo/cloudnaca/msh/r2a'+str(angle)+'n200.msh'
-    xmlfile='./murtazo/cloudnaca/msh/r2a'+str(angle)+'n200.xml'
+    meshfile='../murtazo/cloudnaca/msh/r2a'+str(int(angle))+'n200.msh'
+    xmlfile='../murtazo/cloudnaca/msh/r2a'+str(int(angle))+'n200.xml'
 
     generate_xml='dolfin-convert '+meshfile+' '+xmlfile
     os.system(generate_xml)
 
-    run_airfoil='./murtazo/navier_stokes_solver/airfoil  10 0.0001 10. 0.01 '+xmlfile
+    run_airfoil='../murtazo/navier_stokes_solver/airfoil  10 0.0001 10. 0.01 '+xmlfile
     os.system(run_airfoil)
     
     #zip result
@@ -100,19 +96,11 @@ def calculate(angle):
     os.system("rm -r results.tar.gz")
 
     #Update URL in db
-    try:
-        sql="UPDATE airfoil.results SET url = '"+miniourl+"' WHERE angle = '"+str(angle)+"'"
-        mycursor.execute(sql)
-        db.commit()
-        #Update status in db
-        try:
-            sql="UPDATE airfoil.results SET status = 'done' WHERE angle = '"+str(angle)+"'"
-            mycursor.execute(sql)
-            db.commit()
-        except:
-            db.rollback()
-    except:
-        pass
+    sql="UPDATE airfoil.results SET status='done' WHERE id = '" + str(id_) + "'"
+    mycursor.execute(sql)
+
+    sql="UPDATE airfoil.results SET url='" + str(miniourl) + "' WHERE id = '" + str(id_) + "'"
+    mycursor.execute(sql)
 
     return miniourl
 
