@@ -23,7 +23,7 @@ WORKERS_MAX         = 10
 WORKERS_STEP        = 2
 WORKERS_PANIC_STEP  = 4
 WORKERS_NAME        = socket.gethostname()
-RELEASE_CALLS       = 5
+RELEASE_CALLS       = 10
 CLOUD_CFG_TXT       = 'cloud-cfg.dummy.txt' #'cloud-cfg.txt'
 
 # Workers info.
