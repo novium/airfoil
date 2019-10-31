@@ -22,7 +22,7 @@ async function createNewJob() {
         let result;
         let w = 20;
         while(true) {
-            result = $.get('http://api.cloud.dev.novium.pw/get?id=' + current_job.id);
+            result = await $.get('http://api.cloud.dev.novium.pw/get?id=' + current_job.id);
             result = JSON.parse(result);
 
             if(result.status == 'created') {
