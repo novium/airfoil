@@ -1,5 +1,7 @@
 # Airfoil
 
+For the course 1TD265 (Applied Cloud Computing) @ Uppsala University. Sets up a distributed airfoil calculation cluster using FEniCS with dynamic scaling based on the size of the workload. Requires OpenStack.
+
 ## Local development:
 1. docker-compose up
 
